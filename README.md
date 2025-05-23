@@ -32,6 +32,9 @@ docker-compose up -d --build
 - El microservicio de posts estará disponible en http://localhost:3003
 - La aplicación web estará disponible en http://localhost:3000
 
+## Video
+Video: https://we.tl/t-DbC3KDXFVi
+
 ## Apagar los contenedores
 
 Para apagar los contenedores, ejecutar el comando correspondiente.
