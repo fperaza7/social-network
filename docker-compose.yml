@@ -1,0 +1,91 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: socialdb
+    ports:
+      - "5439:5432"
+    volumes:
+      - ./social-network-data/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  auth:
+    build:
+      context: ./social-network-ms
+      dockerfile: Dockerfile
+    entrypoint: ["/usr/src/app/entrypoint.sh", "auth"]
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: socialdb
+      JWT_SECRET: secret
+    ports:
+      - "3001:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./social-network-ms:/usr/src/app
+      - /usr/src/app/node_modules
+
+  users:
+    build:
+      context: ./social-network-ms
+      dockerfile: Dockerfile
+    entrypoint: ["/usr/src/app/entrypoint.sh", "users"]
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: socialdb
+    ports:
+      - "3002:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./social-network-ms:/usr/src/app
+      - /usr/src/app/node_modules
+
+  posts:
+    build:
+      context: ./social-network-ms
+      dockerfile: Dockerfile
+    entrypoint: ["/usr/src/app/entrypoint.sh", "posts"]
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: socialdb
+    ports:
+      - "3003:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./social-network-ms:/usr/src/app
+      - /usr/src/app/node_modules
+
+  frontend:
+    build:
+      context: ./social-network-app
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80"
+    depends_on:
+      - auth
+      - users
+      - posts
